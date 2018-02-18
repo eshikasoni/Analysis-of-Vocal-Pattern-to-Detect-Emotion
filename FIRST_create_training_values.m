@@ -1,0 +1,648 @@
+ %%  Clearing and Deleting previous matrices
+ clc;
+ 
+ close all;
+ warning off all;
+ %%
+delete net1.mat
+delete svmStruct1.mat
+ delete E_feature.mat
+ delete F_feature.mat
+ delete L_feature.mat
+ delete N_feature.mat
+ delete T_feature.mat
+ delete W_feature.mat
+ delete  total_set.mat
+ delete Total features list.xlsx
+ %%  Making process automated for emotion Boredom(L)
+ %  BEGINING OF PROCESS 
+Files1=dir('/Users/eshikasoni/Desktop/Segregated audio/Boredom/');
+ num_files_Ltype=size(Files1,1); % initialising number of images
+x1(num_files_Ltype,288)=0; % creating a matrix of zero for number of images vs features
+count=1; % initialising count
+for i=4:num_files_Ltype  %Change loop, according to number of images in the folder% 
+      str = strcat('/Users/eshikasoni/Desktop/Segregated audio/Boredom/', Files1(i).name); % extracting files from folder
+      disp(str)      %For displaying the path of image in command window%
+      [sig_limited,fs]=audioread(str);
+      sig_1000=fs/1000;          % maximum speech Fx at 1000Hz
+      sig_50=fs/50;              % minimum speech Fx at 50Hz
+      sig_500=fs/500;                 % maximum speech Fx at 500Hz
+     t=(0:length(sig_limited)-1)/fs;
+     Y=fft(sig_limited.*hamming(length(sig_limited))); % taking FFT
+     hz5000=5000*length(Y)/fs;
+     f=(0:hz5000)*fs/length(Y);
+     C=fft(log(abs(Y)+eps));% cepstrum is DFT of log spectrum
+     q=(sig_1000:sig_50)/fs; % plotting between 1ms  (1000Hz) and 20ms (50Hz)
+     [c,fx]=max(abs(C(sig_1000:sig_50)));
+     r_corre=xcorr(sig_limited,sig_50,'coeff'); % calculate autocorrelation  
+     d_timw=(-sig_50:sig_50)/fs;   
+     r_corre=r_corre(sig_50+1:2*sig_50+1);
+     [rmax,tx]=max(r_corre(sig_500:sig_50));
+     x=resample(sig_limited,10000,fs); 
+     fs=10000;
+     lpf=2+fs/1000;           % rule  
+     a=lpc(x,lpf);
+     [h,f]=freqz(1,a,512,fs);
+     r=roots(a);                  % find roots of polynomial a
+     r=r(imag(r)>0.01);           % only look for roots >0Hz up to fs/2
+     ffreq=sort(atan2(imag(r),real(r))*fs/(2*pi));
+     Features = stFeatureExtraction(sig_limited, fs, 0.020, 0.020);
+     F = Features(3,:);
+     timeFeature = 0.010:0.020:length(x)/fs;
+     time = 0:1/fs:length(x)/fs-1/fs;
+     MIN1 = min([length(F);length(timeFeature)]);
+     timeFeature = timeFeature(1:MIN1);
+     F = F(1:MIN1);
+    MIN2 = min([length(x);length(time)]);
+    time = time(1:MIN2);
+    x = x(1:MIN2);
+  % [Frt] = spFormantsLpc(sig_limited, fs);
+   Ft=Features';
+   [mp,np]=size(Ft);
+   Ft1=Ft(1:round(mp/2),:);
+   Ft2=Ft(round(mp/2):mp,:);
+   A1=max(Ft1);
+   A2=min(Ft1);
+   A3=mean(Ft1);
+   A4=std(Ft1);
+   A7=median(Ft1);
+   A012=entropy(Ft1);
+   A10=max(Ft2);
+   A20=min(Ft2);
+   A30=mean(Ft2);
+   A40=std(Ft2);
+   A70=median(Ft2);
+   A120=entropy(Ft2);
+   A201=max(Ft1);
+   A202=min(Ft1);
+   A203=mean(Ft1);
+   A204=std(Ft1);
+   A207=median(Ft1);
+   Final_feat(count,:)=[A1 A2 A3 A4 A7 A012  A10 A20 A30 A40 A70 A120 A201 A202 A203 A204 A207 ];
+   count=count+1;
+   clear   A1 A2 A3 A4 A7 A012  A10 A20 A30 A40 A70 A120 A201 A202 A203 A204 A207
+   clear Ft1 Ft2 mp np Ft
+end
+ 
+  save L_feature Final_feat   
+  clear all
+ %%  Making process automated for emotion Disgust(E) 
+ 
+Files1=dir('/Users/eshikasoni/Desktop/Segregated audio/Disgust/');
+ num_files_Ltype=size(Files1,1); % initialising number of images
+x1(num_files_Ltype,287)=0; % creating a matrix of zero for number of images vs features
+count=1; % initialising count
+for i=4:num_files_Ltype  %Change loop, according to number of images in the folder% 
+      str = strcat('/Users/eshikasoni/Desktop/Segregated audio/Disgust/', Files1(i).name); % extracting files from folder
+      disp(str)      %For displaying the path of image in command window%
+      [sig_limited,fs]=audioread(str);
+      sig_1000=fs/1000;          % maximum speech Fx at 1000Hz
+      sig_50=fs/50;              % minimum speech Fx at 50Hz
+      sig_500=fs/500;                 % maximum speech Fx at 500Hz
+     t=(0:length(sig_limited)-1)/fs;
+     Y=fft(sig_limited.*hamming(length(sig_limited))); % taking FFT
+     hz5000=5000*length(Y)/fs;
+     f=(0:hz5000)*fs/length(Y);
+     C=fft(log(abs(Y)+eps));% cepstrum is DFT of log spectrum
+     q=(sig_1000:sig_50)/fs; % plotting between 1ms  (1000Hz) and 20ms (50Hz)
+     [c,fx]=max(abs(C(sig_1000:sig_50)));
+     r_corre=xcorr(sig_limited,sig_50,'coeff'); % calculate autocorrelation  
+     d_timw=(-sig_50:sig_50)/fs;   
+     r_corre=r_corre(sig_50+1:2*sig_50+1);
+     [rmax,tx]=max(r_corre(sig_500:sig_50));
+     x=resample(sig_limited,10000,fs); 
+     fs=10000;
+     lpf=2+fs/1000;           % rule  
+     a=lpc(x,lpf);
+     [h,f]=freqz(1,a,512,fs);
+     r=roots(a);                  % find roots of polynomial a
+     r=r(imag(r)>0.01);           % only look for roots >0Hz up to fs/2
+     ffreq=sort(atan2(imag(r),real(r))*fs/(2*pi));
+     Features = stFeatureExtraction(sig_limited, fs, 0.020, 0.020);
+     F = Features(3,:);
+     timeFeature = 0.010:0.020:length(x)/fs;
+     time = 0:1/fs:length(x)/fs-1/fs;
+     MIN1 = min([length(F);length(timeFeature)]);
+     timeFeature = timeFeature(1:MIN1);
+     F = F(1:MIN1);
+    MIN2 = min([length(x);length(time)]);
+    time = time(1:MIN2);
+    x = x(1:MIN2);
+  % [Frt] = spFormantsLpc(sig_limited, fs);
+   Ft=Features';
+   [mp,np]=size(Ft);
+   Ft1=Ft(1:round(mp/2),:);
+   Ft2=Ft(round(mp/2):mp,:);
+   A1=max(Ft1);
+   A2=min(Ft1);
+   A3=mean(Ft1);
+   A4=std(Ft1);
+   A7=median(Ft1);
+   A012=entropy(Ft1);
+   A10=max(Ft2);
+   A20=min(Ft2);
+   A30=mean(Ft2);
+   A40=std(Ft2);
+   A70=median(Ft2);
+   A120=entropy(Ft2);
+   A201=max(Ft1);
+   A202=min(Ft1);
+   A203=mean(Ft1);
+   A204=std(Ft1);
+   A207=median(Ft1);
+    
+   Final_feat(count,:)=[A1 A2 A3 A4 A7 A012  A10 A20 A30 A40 A70 A120 A201 A202 A203 A204 A207 ];
+   count=count+1;
+   clear   A1 A2 A3 A4 A7 A012  A10 A20 A30 A40 A70 A120 A201 A202 A203 A204 A207
+   clear Ft1 Ft2 mp np Ft
+end
+ 
+  save E_feature Final_feat   
+  clear all
+  %%  Making process automated for emotion Happiness(F)
+  Files1=dir('/Users/eshikasoni/Desktop/Segregated audio/Happiness/');
+ num_files_Ltype=size(Files1,1); % initialising number of images
+x1(num_files_Ltype,287)=0; % creating a matrix of zero for number of images vs features
+count=1; % initialising count
+for i=4:num_files_Ltype  %Change loop, according to number of images in the folder% 
+      str = strcat('/Users/eshikasoni/Desktop/Segregated audio/Happiness/', Files1(i).name); % extracting files from folder
+      disp(str)      %For displaying the path of image in command window%
+      [sig_limited,fs]=audioread(str);
+      sig_1000=fs/1000;          % maximum speech Fx at 1000Hz
+      sig_50=fs/50;              % minimum speech Fx at 50Hz
+      sig_500=fs/500;                 % maximum speech Fx at 500Hz
+     t=(0:length(sig_limited)-1)/fs;
+     Y=fft(sig_limited.*hamming(length(sig_limited))); % taking FFT
+     hz5000=5000*length(Y)/fs;
+     f=(0:hz5000)*fs/length(Y);
+     C=fft(log(abs(Y)+eps));% cepstrum is DFT of log spectrum
+     q=(sig_1000:sig_50)/fs; % plotting between 1ms  (1000Hz) and 20ms (50Hz)
+     [c,fx]=max(abs(C(sig_1000:sig_50)));
+     r_corre=xcorr(sig_limited,sig_50,'coeff'); % calculate autocorrelation  
+     d_timw=(-sig_50:sig_50)/fs;   
+     r_corre=r_corre(sig_50+1:2*sig_50+1);
+     [rmax,tx]=max(r_corre(sig_500:sig_50));
+     x=resample(sig_limited,10000,fs); 
+     fs=10000;
+     lpf=2+fs/1000;           % rule  
+     a=lpc(x,lpf);
+     [h,f]=freqz(1,a,512,fs);
+     r=roots(a);                  % find roots of polynomial a
+     r=r(imag(r)>0.01);           % only look for roots >0Hz up to fs/2
+     ffreq=sort(atan2(imag(r),real(r))*fs/(2*pi));
+     Features = stFeatureExtraction(sig_limited, fs, 0.020, 0.020);
+     F = Features(3,:);
+     timeFeature = 0.010:0.020:length(x)/fs;
+     time = 0:1/fs:length(x)/fs-1/fs;
+     MIN1 = min([length(F);length(timeFeature)]);
+     timeFeature = timeFeature(1:MIN1);
+     F = F(1:MIN1);
+    MIN2 = min([length(x);length(time)]);
+    time = time(1:MIN2);
+    x = x(1:MIN2);
+  % [Frt] = spFormantsLpc(sig_limited, fs);
+   Ft=Features';
+   [mp,np]=size(Ft);
+   Ft1=Ft(1:round(mp/2),:);
+   Ft2=Ft(round(mp/2):mp,:);
+   A1=max(Ft1);
+   A2=min(Ft1);
+   A3=mean(Ft1);
+   A4=std(Ft1);
+   A7=median(Ft1);
+   A012=entropy(Ft1);
+   A10=max(Ft2);
+   A20=min(Ft2);
+   A30=mean(Ft2);
+   A40=std(Ft2);
+   A70=median(Ft2);
+   A120=entropy(Ft2);
+   A201=max(Ft1);
+   A202=min(Ft1);
+   A203=mean(Ft1);
+   A204=std(Ft1);
+   A207=median(Ft1);
+ 
+   Final_feat(count,:)=[A1 A2 A3 A4 A7 A012  A10 A20 A30 A40 A70 A120 A201 A202 A203 A204 A207 ];
+   count=count+1;
+   clear   A1 A2 A3 A4 A7 A012  A10 A20 A30 A40 A70 A120 A201 A202 A203 A204 A207
+   clear Ft1 Ft2 mp np Ft
+end
+ 
+  save F_feature Final_feat   
+  clear all
+   %%  Making process automated for emotion Neutral(N)
+  Files1=dir('/Users/eshikasoni/Desktop/Segregated audio/Neutral/');
+ num_files_Ltype=size(Files1,1); % initialising number of images
+x1(num_files_Ltype,287)=0; % creating a matrix of zero for number of images vs features
+count=1; % initialising count
+for i=4:num_files_Ltype  %Change loop, according to number of images in the folder% 
+      str = strcat('/Users/eshikasoni/Desktop/Segregated audio/Neutral/', Files1(i).name); % extracting files from folder
+      disp(str)      %For displaying the path of image in command window%
+      [sig_limited,fs]=audioread(str);
+      sig_1000=fs/1000;          % maximum speech Fx at 1000Hz
+      sig_50=fs/50;              % minimum speech Fx at 50Hz
+      sig_500=fs/500;                 % maximum speech Fx at 500Hz
+     t=(0:length(sig_limited)-1)/fs;
+     Y=fft(sig_limited.*hamming(length(sig_limited))); % taking FFT
+     hz5000=5000*length(Y)/fs;
+     f=(0:hz5000)*fs/length(Y);
+     C=fft(log(abs(Y)+eps));% cepstrum is DFT of log spectrum
+     q=(sig_1000:sig_50)/fs; % plotting between 1ms  (1000Hz) and 20ms (50Hz)
+     [c,fx]=max(abs(C(sig_1000:sig_50)));
+     r_corre=xcorr(sig_limited,sig_50,'coeff'); % calculate autocorrelation  
+     d_timw=(-sig_50:sig_50)/fs;   
+     r_corre=r_corre(sig_50+1:2*sig_50+1);
+     [rmax,tx]=max(r_corre(sig_500:sig_50));
+     x=resample(sig_limited,10000,fs); 
+     fs=10000;
+     lpf=2+fs/1000;           % rule  
+     a=lpc(x,lpf);
+     [h,f]=freqz(1,a,512,fs);
+     r=roots(a);                  % find roots of polynomial a
+     r=r(imag(r)>0.01);           % only look for roots >0Hz up to fs/2
+     ffreq=sort(atan2(imag(r),real(r))*fs/(2*pi));
+     Features = stFeatureExtraction(sig_limited, fs, 0.020, 0.020);
+     F = Features(3,:);
+     timeFeature = 0.010:0.020:length(x)/fs;
+     time = 0:1/fs:length(x)/fs-1/fs;
+     MIN1 = min([length(F);length(timeFeature)]);
+     timeFeature = timeFeature(1:MIN1);
+     F = F(1:MIN1);
+    MIN2 = min([length(x);length(time)]);
+    time = time(1:MIN2);
+    x = x(1:MIN2);
+  % [Frt] = spFormantsLpc(sig_limited, fs);
+   Ft=Features';
+   [mp,np]=size(Ft);
+   Ft1=Ft(1:round(mp/2),:);
+   Ft2=Ft(round(mp/2):mp,:);
+   A1=max(Ft1);
+   A2=min(Ft1);
+   A3=mean(Ft1);
+   A4=std(Ft1);
+   A7=median(Ft1);
+   A012=entropy(Ft1);
+   A10=max(Ft2);
+   A20=min(Ft2);
+   A30=mean(Ft2);
+   A40=std(Ft2);
+   A70=median(Ft2);
+   A120=entropy(Ft2);
+   A201=max(Ft1);
+   A202=min(Ft1);
+   A203=mean(Ft1);
+   A204=std(Ft1);
+   A207=median(Ft1);
+   count=count+1;
+   Final_feat(count,:)=[A1 A2 A3 A4 A7 A012  A10 A20 A30 A40 A70 A120 A201 A202 A203 A204 A207 ];
+   
+   clear   A1 A2 A3 A4 A7 A012  A10 A20 A30 A40 A70 A120 A201 A202 A203 A204 A207
+   clear Ft1 Ft2 mp np Ft
+end
+   save N_feature Final_feat   
+  clear all
+   %%  Making process automated for emotion Sadness(T) 
+  Files1=dir('/Users/eshikasoni/Desktop/Segregated audio/Sadness/');
+ num_files_Ltype=size(Files1,1); % initialising number of images
+x1(num_files_Ltype,287)=0; % creating a matrix of zero for number of images vs features
+count=1; % initialising count
+for i=4:num_files_Ltype  %Change loop, according to number of images in the folder% 
+      str = strcat('/Users/eshikasoni/Desktop/Segregated audio/Sadness/', Files1(i).name); % extracting files from folder
+      disp(str)      %For displaying the path of image in command window%
+      [sig_limited,fs]=audioread(str);
+      sig_1000=fs/1000;          % maximum speech Fx at 1000Hz
+      sig_50=fs/50;              % minimum speech Fx at 50Hz
+      sig_500=fs/500;                 % maximum speech Fx at 500Hz
+     t=(0:length(sig_limited)-1)/fs;
+     Y=fft(sig_limited.*hamming(length(sig_limited))); % taking FFT
+     hz5000=5000*length(Y)/fs;
+     f=(0:hz5000)*fs/length(Y);
+     C=fft(log(abs(Y)+eps));% cepstrum is DFT of log spectrum
+     q=(sig_1000:sig_50)/fs; % plotting between 1ms  (1000Hz) and 20ms (50Hz)
+     [c,fx]=max(abs(C(sig_1000:sig_50)));
+     r_corre=xcorr(sig_limited,sig_50,'coeff'); % calculate autocorrelation  
+     d_timw=(-sig_50:sig_50)/fs;   
+     r_corre=r_corre(sig_50+1:2*sig_50+1);
+     [rmax,tx]=max(r_corre(sig_500:sig_50));
+     x=resample(sig_limited,10000,fs); 
+     fs=10000;
+     lpf=2+fs/1000;           % rule  
+     a=lpc(x,lpf);
+     [h,f]=freqz(1,a,512,fs);
+     r=roots(a);                  % find roots of polynomial a
+     r=r(imag(r)>0.01);           % only look for roots >0Hz up to fs/2
+     ffreq=sort(atan2(imag(r),real(r))*fs/(2*pi));
+     Features = stFeatureExtraction(sig_limited, fs, 0.020, 0.020);
+     F = Features(3,:);
+     timeFeature = 0.010:0.020:length(x)/fs;
+     time = 0:1/fs:length(x)/fs-1/fs;
+     MIN1 = min([length(F);length(timeFeature)]);
+     timeFeature = timeFeature(1:MIN1);
+     F = F(1:MIN1);
+    MIN2 = min([length(x);length(time)]);
+    time = time(1:MIN2);
+    x = x(1:MIN2);
+  % [Frt] = spFormantsLpc(sig_limited, fs);
+   Ft=Features';
+   [mp,np]=size(Ft);
+   Ft1=Ft(1:round(mp/2),:);
+   Ft2=Ft(round(mp/2):mp,:);
+   A1=max(Ft1);
+   A2=min(Ft1);
+   A3=mean(Ft1);
+   A4=std(Ft1);
+   A7=median(Ft1);
+   A012=entropy(Ft1);
+   A10=max(Ft2);
+   A20=min(Ft2);
+   A30=mean(Ft2);
+   A40=std(Ft2);
+   A70=median(Ft2);
+   A120=entropy(Ft2);
+   A201=max(Ft1);
+   A202=min(Ft1);
+   A203=mean(Ft1);
+   A204=std(Ft1);
+   A207=median(Ft1);
+    
+   Final_feat(count,:)=[A1 A2 A3 A4 A7 A012  A10 A20 A30 A40 A70 A120 A201 A202 A203 A204 A207 ];
+   count=count+1;
+   clear   A1 A2 A3 A4 A7 A012  A10 A20 A30 A40 A70 A120 A201 A202 A203 A204 A207
+   clear Ft1 Ft2 mp np Ft
+end
+ 
+  save T_feature Final_feat   
+  clear all
+  %%
+    %%  Making process automated for emotion Anger(T) 
+  Files1=dir('/Users/eshikasoni/Desktop/Segregated audio/Anger/');
+ num_files_Ltype=size(Files1,1); % initialising number of images
+x1(num_files_Ltype,287)=0; % creating a matrix of zero for number of images vs features
+count=1; % initialising count
+for i=3:num_files_Ltype  %Change loop, according to number of images in the folder% 
+      str = strcat('/Users/eshikasoni/Desktop/Segregated audio/Anger/', Files1(i).name); % extracting files from folder
+      disp(str)      %For displaying the path of image in command window%
+      [sig_limited,fs]=audioread(str);
+      sig_1000=fs/1000;          % maximum speech Fx at 1000Hz
+      sig_50=fs/50;              % minimum speech Fx at 50Hz
+      sig_500=fs/500;                 % maximum speech Fx at 500Hz
+     t=(0:length(sig_limited)-1)/fs;
+     Y=fft(sig_limited.*hamming(length(sig_limited))); % taking FFT
+     hz5000=5000*length(Y)/fs;
+     f=(0:hz5000)*fs/length(Y);
+     C=fft(log(abs(Y)+eps));% cepstrum is DFT of log spectrum
+     q=(sig_1000:sig_50)/fs; % plotting between 1ms  (1000Hz) and 20ms (50Hz)
+     [c,fx]=max(abs(C(sig_1000:sig_50)));
+     r_corre=xcorr(sig_limited,sig_50,'coeff'); % calculate autocorrelation  
+     d_timw=(-sig_50:sig_50)/fs;   
+     r_corre=r_corre(sig_50+1:2*sig_50+1);
+     [rmax,tx]=max(r_corre(sig_500:sig_50));
+     x=resample(sig_limited,10000,fs); 
+     fs=10000;
+     lpf=2+fs/1000;           % rule  
+     a=lpc(x,lpf);
+     [h,f]=freqz(1,a,512,fs);
+     r=roots(a);                  % find roots of polynomial a
+     r=r(imag(r)>0.01);           % only look for roots >0Hz up to fs/2
+     ffreq=sort(atan2(imag(r),real(r))*fs/(2*pi));
+     Features = stFeatureExtraction(sig_limited, fs, 0.020, 0.020);
+     F = Features(3,:);
+     timeFeature = 0.010:0.020:length(x)/fs;
+     time = 0:1/fs:length(x)/fs-1/fs;
+     MIN1 = min([length(F);length(timeFeature)]);
+     timeFeature = timeFeature(1:MIN1);
+     F = F(1:MIN1);
+    MIN2 = min([length(x);length(time)]);
+    time = time(1:MIN2);
+    x = x(1:MIN2);
+  % [Frt] = spFormantsLpc(sig_limited, fs);
+   Ft=Features';
+   [mp,np]=size(Ft);
+   Ft1=Ft(1:round(mp/2),:);
+   Ft2=Ft(round(mp/2):mp,:);
+   A1=max(Ft1);
+   A2=min(Ft1);
+   A3=mean(Ft1);
+   A4=std(Ft1);
+   A7=median(Ft1);
+   A012=entropy(Ft1);
+   A10=max(Ft2);
+   A20=min(Ft2);
+   A30=mean(Ft2);
+   A40=std(Ft2);
+   A70=median(Ft2);
+   A120=entropy(Ft2);
+   A201=max(Ft1);
+   A202=min(Ft1);
+   A203=mean(Ft1);
+   A204=std(Ft1);
+   A207=median(Ft1);
+   
+  Final_feat(count,:)=[A1 A2 A3 A4 A7 A012  A10 A20 A30 A40 A70 A120 A201 A202 A203 A204 A207 ];
+   count=count+1;
+  clear   A1 A2 A3 A4 A7 A012  A10 A20 A30 A40 A70 A120 A201 A202 A203 A204 A207
+   clear Ft1 Ft2 mp np Ft
+end
+ 
+% N_label=ones(1,num_files_Ltype);
+ 
+
+  save W_feature Final_feat   
+  clear all
+  %%  Making Process automated for emotion Fear(A)
+    
+  Files1=dir('/Users/eshikasoni/Desktop/Segregated audio/Fear/');
+ num_files_Ltype=size(Files1,1); % initialising number of images
+x1(num_files_Ltype,287)=0; % creating a matrix of zero for number of images vs features
+count=1; % initialising count
+for i=4:num_files_Ltype  %Change loop, according to number of images in the folder% 
+      str = strcat('/Users/eshikasoni/Desktop/Segregated audio/Fear/', Files1(i).name); % extracting files from folder
+      disp(str)      %For displaying the path of image in command window%
+      [sig_limited,fs]=audioread(str);
+      sig_1000=fs/1000;          % maximum speech Fx at 1000Hz
+      sig_50=fs/50;              % minimum speech Fx at 50Hz
+      sig_500=fs/500;                 % maximum speech Fx at 500Hz
+     t=(0:length(sig_limited)-1)/fs;
+     Y=fft(sig_limited.*hamming(length(sig_limited))); % taking FFT
+     hz5000=5000*length(Y)/fs;
+     f=(0:hz5000)*fs/length(Y);
+     C=fft(log(abs(Y)+eps));% cepstrum is DFT of log spectrum
+     q=(sig_1000:sig_50)/fs; % plotting between 1ms  (1000Hz) and 20ms (50Hz)
+     [c,fx]=max(abs(C(sig_1000:sig_50)));
+     r_corre=xcorr(sig_limited,sig_50,'coeff'); % calculate autocorrelation  
+     d_timw=(-sig_50:sig_50)/fs;   
+     r_corre=r_corre(sig_50+1:2*sig_50+1);
+     [rmax,tx]=max(r_corre(sig_500:sig_50));
+     x=resample(sig_limited,10000,fs); 
+     fs=10000;
+     lpf=2+fs/1000;           % rule  
+     a=lpc(x,lpf);
+     [h,f]=freqz(1,a,512,fs);
+     r=roots(a);                  % find roots of polynomial a
+     r=r(imag(r)>0.01);           % only look for roots >0Hz up to fs/2
+     ffreq=sort(atan2(imag(r),real(r))*fs/(2*pi));
+     Features = stFeatureExtraction(sig_limited, fs, 0.020, 0.020);
+     F = Features(3,:);
+     timeFeature = 0.010:0.020:length(x)/fs;
+     time = 0:1/fs:length(x)/fs-1/fs;
+     MIN1 = min([length(F);length(timeFeature)]);
+     timeFeature = timeFeature(1:MIN1);
+     F = F(1:MIN1);
+    MIN2 = min([length(x);length(time)]);
+    time = time(1:MIN2);
+    x = x(1:MIN2);
+  % [Frt] = spFormantsLpc(sig_limited, fs);
+   Ft=Features';
+   [mp,np]=size(Ft);
+   Ft1=Ft(1:round(mp/2),:);
+   Ft2=Ft(round(mp/2):mp,:);
+   A1=max(Ft1);
+   A2=min(Ft1);
+   A3=mean(Ft1);
+   A4=std(Ft1);
+   A7=median(Ft1);
+   A012=entropy(Ft1);
+   A10=max(Ft2);
+   A20=min(Ft2);
+   A30=mean(Ft2);
+   A40=std(Ft2);
+   A70=median(Ft2);
+   A120=entropy(Ft2);
+   A201=max(Ft1);
+   A202=min(Ft1);
+   A203=mean(Ft1);
+   A204=std(Ft1);
+   A207=median(Ft1);
+   
+  Final_feat(count,:)=[A1 A2 A3 A4 A7 A012  A10 A20 A30 A40 A70 A120 A201 A202 A203 A204 A207 ];
+   count=count+1;
+  clear   A1 A2 A3 A4 A7 A012  A10 A20 A30 A40 A70 A120 A201 A202 A203 A204 A207
+   clear Ft1 Ft2 mp np Ft
+end
+ 
+% N_label=ones(1,num_files_Ltype);
+ 
+
+  save W_feature Final_feat   
+  clear all
+  %% Loading all feature set
+  L=load('L_feature');
+  W=load('W_feature');
+  N=load('N_feature');
+  T=load('T_feature');
+  E=load('E_feature');
+  F=load('F_feature');
+%   L_label=
+%   W_Label=
+%   
+  %test_set=[L.Final_feat;F.Final_feat];
+  
+  total_set=[F.Final_feat;L.Final_feat;W.Final_feat;N.Final_feat;T.Final_feat;E.Final_feat];
+%   total_set = total_set/norm(total_set);
+  xlswrite('Total features list.xlsx',total_set,'A1')
+  save all_feat total_set
+  %%  Labelling data 
+  [a_lab,~]=size(F.Final_feat);
+  [b_lab,~]=size( total_set);
+  Size_f=a_lab;
+  size_rem=b_lab-a_lab;
+  %% Setting fear to 1 and others to zero
+  lab_F=ones( Size_f,1);
+  lab_rem=zeros(size_rem,1);
+  svm_label=[lab_F;lab_rem]; % for svm 
+  save svm_label.mat svm_label
+  %% Neural Network Classifier
+  neur_label_1=[lab_F' lab_rem'];
+  neur_label_2=1-neur_label_1;
+  neur_label=[neur_label_1;neur_label_2];
+  neural_feat=[total_set]';
+  net1= patternnet(85);
+  
+view(net1)
+  [net1,tr2] = train(net1,neural_feat,neur_label,'showResources','yes');
+ m= net1.layers.transferFcn
+% wb = formwb(net,net.b,net.iw,net.lw);
+% [b,iw,lw] = separatewb(net,wb);
+% w1 = net.IW{1}; %the input-to-hidden layer weights
+% w2 = net.LW{2}; %the hidden-to-output layer weights
+% b1 = net.b{1}; %the input-to-hidden layer bias
+% b2 = net.b{2}; %the hidden-to-output layer bias
+
+
+nntraintool 
+load tr.mat
+load net.mat
+%plotperform(tr)
+%tr.testInd=[9,20,23,39,41,43,48,60,63,71,88,117,118,124,126,128,139,140,141,142,149,159,162,165,171,174,182,188,189,191,203,215,216,222,226,233,236,238,240,252,255,262,281,285,295,305,308,309,316,318,343,345,346,358,359,362,376,378,386,392,403];
+testX = neural_feat(:,tr.testInd);% double click tr search for test index 9th column
+testT = neur_label(:,tr.testInd);
+testY = net(testX);
+testIndices = vec2ind(testY);
+ 
+figure,plotconfusion(testT,testY)
+  pause(0.005)
+%   for i =1:length(testT)
+%       if (testT==1)
+%           testT(i)=2;
+%       else 
+%         testT(i)=1;
+%       end 
+%   end 
+   [c,cm] = confusion(testT,testY);
+   
+   fprintf('\n')
+fprintf('Percentage Correct Classification   : %f%%\n', 100*(1-c));
+fprintf('Percentage Incorrect Classification : %f%%\n', 100*c);
+% figure,plotroc(testT,testY)
+%a=smooth(testT);
+%b=smooth(testY);
+figure,plotroc(testT,testY)
+ 
+% Saving ``NEURAL NET 
+% save net.mat net
+
+%%  SVM Classifier
+% change kernal as ul want here it is linear in line number 523 and 524
+% 505 & 506 only two values i am taking
+% in classification accuracy i am taking all the data
+% 10-11
+k=total_set(:,14:15);
+figure, svmStruct = svmtrain(k,svm_label,'kernel_function','linear','showplot',true);
+ 
+
+save svmStruct1.mat svmStruct
+
+
+% %%
+% load Trainset.mat
+data   = [total_set(:,14), total_set(:,15)];
+ Accuracy_Percent= zeros(200,1);
+ itr = 80;
+% hWaitBar = waitbar(0,'Evaluating Maximum Accuracy with 100 iterations');
+ for i = 1:itr
+  data = total_set;
+groups = svm_label;
+ 
+ [train,test] = crossvalind('HoldOut',groups);
+ cp = classperf(groups);
+svmStruct = svmtrain(data(train,:),groups(train),'boxconstraint',Inf,'showplot',true,'kernel_function','linear');
+%svmStruct1 = svmtrain(data(train,:),groups(train),'boxconstraint',Inf,'showplot',true,'kernel_function','quadratic');
+%svmStruct2 = svmtrain(data(train,:),groups(train),'boxconstraint',Inf,'showplot',true,'kernel_function','polynomial');
+%svmStruct3 = svmtrain(data(train,:),groups(train),'boxconstraint',Inf,'showplot',true,'kernel_function','mlp');
+%svmStruct_RBF = svmtrain(data(train,:),groups(train),'boxconstraint',Inf,'showplot',true,'kernel_function','rbf');
+classes2 = svmclassify(svmStruct,data(test,:),'showplot',false);
+ classperf(cp,classes2,test);
+ stats=confusionmatStats(cp.DiagnosticTable);
+ Accuracy_Classification_RBF = cp.CorrectRate.*100;
+  Accuracy_Percent(i) = cp.CorrectRate.*100;
+% sprintf('Accuracy of RBF Kernel is: %g%%',Accuracy_Percent(i))
+% %  waitbar(i/itr);
+ end
+% delete(hWaitBar);
+Max_Accuracy = max(Accuracy_Percent);
+ sprintf('Accuracy of SVM kernel is: %g%%',Max_Accuracy)
+ confusion=cp.DiagnosticTable
+ 
+
+repeat=1;

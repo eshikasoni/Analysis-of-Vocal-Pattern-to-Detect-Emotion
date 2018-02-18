@@ -1,0 +1,223 @@
+
+  
+  %% LOADING SINGLE IMAGE
+  
+  %% vocal recognisition 
+
+ 
+%%  Step 1 : Preparing Matlab to run execution
+% load the file 
+% from the name extract the annotation 
+ 
+
+%% Step 2 : Loading the Signal 
+[path,file]=uigetfile('*.wav','Load the speech signal');
+full_path=strcat(file,path);
+
+%% Step 3 : Reading audio file & also taking small section for analysis 
+sig=audioread(full_path);
+fprintf('\n The data under observation is : %s \n ',path)
+[sig_limited,fs]=audioread(full_path,[21120 25930]); % [21120 25930]is window length
+figure,plot(sig),title('ORIGNAL AUDIO SIGNAL ')
+fprintf('\n')
+%% Step 2 : ESTIMATING FUNDEMENTAL FREQUENCY
+%For initial analysis Here we take only a portion of signal "any portion"
+% so as to find which is
+% the dominant frequency , which repeats.
+% and because all the signal are not periodic and the one which are periodic
+% change there fundemental frequency changes over time and also there could
+% be noise . Finding thw smallest periodic interval gives us the
+% fundemantal frequency . Cepstrum analysis he;ps in estimating the
+% dominant frequency  which is nothing but the fourier of logarithmic 
+% amplitude of  the signal.If the log amplitude spectrum contains many 
+% regularly spaced harmonics, then the Fourier analysis of the spectrum
+% will show a peak corresponding to the spacing between the harmonics: 
+% i.e. the fundamental frequency.   
+   
+sig_1000=fs/1000;          % maximum speech Fx at 1000Hz
+sig_50=fs/50;              % minimum speech Fx at 50Hz
+t=(0:length(sig_limited)-1)/fs; % times of sampling instants to plot as time 
+figure
+plot(t,sig_limited);               
+legend('Waveform');
+xlabel('Time (s)');
+ylabel('Amplitude');
+title('Signal for selected duration')
+Y=fft(sig_limited.*hamming(length(sig_limited))); % taking FFT
+% plot spectrum of bottom 5000Hz
+hz5000=5000*length(Y)/fs;
+f=(0:hz5000)*fs/length(Y);
+figure,subplot(2,1,1);
+plot(f,20*log10(abs(Y(1:length(f)))+eps));
+legend('Spectrum');
+xlabel('Frequency (Hz)');
+ylabel('Magnitude (dB)');
+title('Fourier plot')
+C=fft(log(abs(Y)+eps));% cepstrum is FFT of log spectrum
+q=(sig_1000:sig_50)/fs; % plotting between 1ms  (1000Hz) and 20ms (50Hz)
+subplot(2,1,2);
+plot(q,abs(C(sig_1000:sig_50)));
+legend('Cepstrum');
+xlabel('Quefrency (s)');
+ylabel('Amplitude');
+title('cepstrum plot')
+[c,fx]=max(abs(C(sig_1000:sig_50)));
+fprintf('Fx=%gHz\n',fs/(sig_50+fx-1));
+fprintf('Fx=%gHz\n',fs/(sig_1000+fx-1));
+%% Step 3 :  Fundamental frequency estimation in time domain
+% The cepstrum looks for periodicity in the log spectrum of the signal, 
+% whereas our perception of pitch is more strongly related to periodicity
+% in the waveform itself.  A means to estimate fundamental frequency from 
+% the waveform directly is to use autocorrelation.  
+% The autocorrelation function for a section of signal shows how well the
+% waveform shape correlates with itself at a range of different delays.  
+% We expect a periodic signal to correlate well with itself at very short
+% delays and at delays corresponding to multiples of pitch periods.
+
+% get a section of vowel
+ sig_50=fs/50;                 % minimum speech Fx at 50Hz
+%
+% plot waveform
+%t=(0:length(sig_limited)-1)/fs;        % times of sampling instants
+figure,subplot(2,1,1);
+plot(t,sig_limited);
+legend('Waveform');
+xlabel('Time (s)');
+ylabel('Amplitude');
+r_corre=xcorr(sig_limited,sig_50,'coeff'); % calculate autocorrelation  
+% plot autocorrelation
+d_timw=(-sig_50:sig_50)/fs;          % times of delays
+subplot(2,1,2);
+plot(d_timw,r_corre);
+legend('Autocorrelation');
+xlabel('Delay (s)');
+ylabel('Correlation coeff.');
+sig_500=fs/500;                 % maximum speech Fx at 500Hz
+ %sig_50=fs/50                 % minimum speech Fx at 50Hz
+% just look at region corresponding to positive delays
+r_corre=r_corre(sig_50+1:2*sig_50+1);   % what does autocorelation of signal mean 
+[rmax,tx]=max(r_corre(sig_500:sig_50));
+fprintf('Rmax=%g : Fx=%gHz\n',rmax,fs/(sig_500+tx-1));
+% The autocorrelation approach works best when the signal is of low, regular 
+% pitch and when the spectral content of the signal is not changing too rapidly.  
+% The autocorrelation method is prone to pitch halving errors where a 
+%delay of two pitch periods is chosen by mistake.  
+%It can also be influenced by periodicity in the signal caused by 
+% formant resonances, particularly for female voices where F1 can be 
+% lower in frequency than Fx.
+
+%% step 4: Concentration of acoustic energy around a particular frequency
+%  acoustic energy around a particular frequency or called as formant
+%  frequencies are the properies of vocal tract which can be infered 
+% from speech signal.  WHen excitation takes place at the vocal tract
+% excition is influenced but cannot be guaranteed that all 
+% vocal tract resonance will cause same peak 
+% formant frequency estimation is done with the fact that all the  speech 
+% signal  were generated by a particular kind of source  & filter which is
+% called as soursce filter separation 
+% here we use linear prediction model like it was generated by signal of
+% minimum energy passed through purely -recursiive IIR filter
+% resample to 10,000Hz (optional)
+x=resample(sig_limited,10000,fs); % resampling 
+fs=10000;
+% plot waveform
+t1=(0:length(x)-1)/fs;        % times of sampling instants
+figure,subplot(2,1,1);
+plot(t1,x);
+legend('Waveform');
+xlabel('Time (s)');
+ylabel('Amplitude');
+%
+% get Linear prediction filter
+lpf=2+fs/1000;           % rule  
+a=lpc(x,lpf);
+%
+% plot frequency response
+[h,f]=freqz(1,a,512,fs);
+subplot(2,1,2);
+plot(f,20*log10(abs(h)+eps));
+legend('LP Filter');
+xlabel('Frequency (Hz)');
+ylabel('Gain (dB)');
+% find frequencies by root-solving
+r=roots(a);                  % find roots of polynomial a
+r=r(imag(r)>0.01);           % only look for roots >0Hz up to fs/2
+ffreq=sort(atan2(imag(r),real(r))*fs/(2*pi));
+                             % convert to Hz and sort
+ for i=1:length(ffreq)
+     fprintf('Formant freq %i : %.1f \n:',i,ffreq(i));
+ end
+% Extract features from speech 
+%% Step 6 : Feature extraction
+
+% open the speech file:
+ 
+
+% feature extraction:
+Features = stFeatureExtraction(sig, fs, 0.020, 0.020);
+%
+F = Features(3,:);
+%%
+%
+% compute time vectors:
+
+timeFeature = 0.010:0.020:length(x)/fs;
+time = 0:1/fs:length(x)/fs-1/fs;
+
+% post-process time vectors, sequence vector and signal vector:
+MIN1 = min([length(F);length(timeFeature)]);
+timeFeature = timeFeature(1:MIN1);
+F = F(1:MIN1);
+
+MIN2 = min([length(x);length(time)]);
+time = time(1:MIN2);
+x = x(1:MIN2);
+
+% plot zcr sequence and signal
+subplot(2,1,1);
+plot(time, x);
+xlabel('Time (sec)');
+title('Signal');
+axis([0 max(time) min(x) max(x)])
+subplot(2,1,2);
+plot(timeFeature, F);
+xlabel('Time (sec)');
+title('Energy Entropy Sequence');
+axis([0 max(timeFeature) min(F) max(F)])
+%[Frt] = spFormantsLpc(sig_limited, fs);
+%% 
+Ft=Features';
+[mp,np]=size(Ft);
+Ft1=Ft(1:round(mp/2),:);
+Ft2=Ft(round(mp/2):mp,:);
+A1=max(Ft1);
+A2=min(Ft1);
+A3=mean(Ft1);
+A4=std(Ft1);
+%A6=mode(Ft1);
+A7=median(Ft1);
+%A8=cov(Ft1);
+%A9=corrcoef(Ft1);
+%A010=xcorr(Ft1);
+%A011=xcov(Ft1);
+A012=entropy(Ft1);
+A10=max(Ft2);
+A20=min(Ft2);
+A30=mean(Ft2);
+A40=std(Ft2);
+%A60=mode(Ft2);
+A70=median(Ft2);
+%A80=cov(Ft2);
+%A90=corrcoef(Ft2);
+%A100=xcorr(Ft2);
+%A110=xcov(Ft2);
+A120=entropy(Ft2);
+A201=max(Ft1);
+A202=min(Ft1);
+A203=mean(Ft1);
+A204=std(Ft1);
+%A6=mode(Ft1);
+A207=median(Ft1);
+Final_feat=[A1 A2 A3 A4 A7 A012  A10 A20 A30 A40 A70 A120 A201 A202 A203 A204 A207 ];
+disp('Done processing single signal')
+ %%
