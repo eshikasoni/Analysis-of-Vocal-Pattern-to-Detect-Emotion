@@ -1,0 +1,1 @@
+# Analysis-of-Vocal-Pattern-to-Detect-Emotion
